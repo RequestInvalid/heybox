@@ -3,7 +3,7 @@ name: Heybox daily tasks
 on:
   schedule:
     # GitHub Actions uses UTC. 00:17 UTC is 08:17 in Asia/Shanghai.
-    - cron: "17 0 * * *"
+    - cron: "0 17 * * *"
   workflow_dispatch:
     inputs:
       task:
