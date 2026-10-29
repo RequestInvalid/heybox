@@ -1,15 +1,15 @@
-name: Heybox daily tasks
+name: Heybox daily sign
 
 on:
   schedule:
-    # GitHub Actions uses UTC. 00:17 UTC is 08:17 in Asia/Shanghai.
+    # GitHub Actions uses UTC. 17:00 UTC is 01:00 in Asia/Shanghai the next day.
     - cron: "0 17 * * *"
   workflow_dispatch:
     inputs:
       task:
         description: Task to run
         required: true
-        default: all
+        default: sign
         type: choice
         options:
           - all
@@ -31,7 +31,7 @@ jobs:
     timeout-minutes: 60
     env:
       heybox_ck: ${{ secrets.HEYBOX_CK }}
-      TASK: ${{ github.event.inputs.task || 'all' }}
+      TASK: ${{ github.event.inputs.task || 'sign' }}
 
     steps:
       - name: Check out repository

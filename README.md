@@ -23,9 +23,9 @@ npm install
 HEYBOX_CK
 ```
 
-Secret 的值与本地环境变量 `heybox_ck` 相同。工作流默认在北京时间每天 08:17 运行每日任务、普通领券和抽奖任务。GitHub 的定时任务可能延迟，实际执行时间不会精确到分钟。
+Secret 的值与本地环境变量 `heybox_ck` 相同。工作流默认每天只运行 `heybox_sign.js`，当前定时时间为 17:00 UTC，即北京时间次日 01:00。GitHub 的定时任务可能延迟，实际执行时间不会精确到分钟。
 
-在 `Actions > Heybox daily tasks > Run workflow` 中可以选择 `all`、`sign`、`claim`、`roll` 或 `rush` 手动运行。`rush` 仍然使用 `heybox_rush.js` 中的 `CONFIG`，需要先按券的开抢时间配置 `rushAt` 或 `targets`。
+在 `Actions > Heybox daily sign > Run workflow` 中可以手动选择 `all`、`sign`、`claim`、`roll` 或 `rush`，默认选择 `sign`。`rush` 仍然使用 `heybox_rush.js` 中的 `CONFIG`，需要先按券的开抢时间配置 `rushAt` 或 `targets`。
 
 公开仓库连续 60 天没有仓库活动时，GitHub 可能自动停用定时工作流。需要定期检查 `Actions` 页面并重新启用。
 
