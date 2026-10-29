@@ -1,0 +1,100 @@
+name: Heybox daily tasks
+
+on:
+  schedule:
+    # GitHub Actions uses UTC. 00:17 UTC is 08:17 in Asia/Shanghai.
+    - cron: "17 0 * * *"
+  workflow_dispatch:
+    inputs:
+      task:
+        description: Task to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - sign
+          - claim
+          - roll
+          - rush
+
+permissions:
+  contents: read
+
+concurrency:
+  group: heybox-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      heybox_ck: ${{ secrets.HEYBOX_CK }}
+      TASK: ${{ github.event.inputs.task || 'all' }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Validate configuration
+        shell: bash
+        run: |
+          if [ -z "$heybox_ck" ]; then
+            echo "::error title=Missing repository secret::Add HEYBOX_CK under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run daily sign
+        id: sign
+        if: env.TASK == 'all' || env.TASK == 'sign'
+        continue-on-error: true
+        run: npm run heybox_sign
+
+      - name: Run coupon claim
+        id: claim
+        if: env.TASK == 'all' || env.TASK == 'claim'
+        continue-on-error: true
+        run: npm run heybox_claim
+
+      - name: Run lottery tasks
+        id: roll
+        if: env.TASK == 'all' || env.TASK == 'roll'
+        continue-on-error: true
+        run: npm run heybox_roll
+
+      - name: Run timed coupon rush
+        id: rush
+        if: env.TASK == 'rush'
+        continue-on-error: true
+        run: npm run heybox_rush
+
+      - name: Check task results
+        if: always()
+        shell: bash
+        env:
+          SIGN_RESULT: ${{ steps.sign.outcome }}
+          CLAIM_RESULT: ${{ steps.claim.outcome }}
+          ROLL_RESULT: ${{ steps.roll.outcome }}
+          RUSH_RESULT: ${{ steps.rush.outcome }}
+        run: |
+          failed=0
+          for result in "$SIGN_RESULT" "$CLAIM_RESULT" "$ROLL_RESULT" "$RUSH_RESULT"; do
+            if [ "$result" = "failure" ]; then
+              failed=$((failed + 1))
+            fi
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::$failed task(s) failed. See the logs above."
+            exit 1
+          fi
